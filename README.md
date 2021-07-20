@@ -71,3 +71,24 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](LICENSE).
+
+
+# Comandos de heroku
+
+Crear variables de entorno en heroku
+
+```
+heroku login 
+
+heroku create
+
+heroku apps:rename --app nombreviejo nombrenuevo
+
+heroku local web
+
+heroku open
+git push heroku master
+
+heroku logs --tail
+heroku run bash
+```
