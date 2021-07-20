@@ -1,0 +1,58 @@
+import { HttpModule, HttpService, Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import * as Joi from 'joi';
+import { AppService } from './app.service';
+import { UsersModule } from './users/users.module';
+import { ProductsModule } from './products/products.module';
+import { DatabaseModule } from './database/database.module';
+import { enviroments } from './enviroments';
+import config from './config';
+
+// const API_KEY = '1234556';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      envFilePath: enviroments[process.env.NODE_ENV] || '.env',
+      isGlobal: true,
+      // validacion de tipado seguro en la configuración
+      load: [config],
+      // validacion de esquema para variables que nos llegan desde el servidor ej gitlab
+      validationSchema: Joi.object().keys({
+        API_KEY: Joi.number().required(),
+        DATABASE_NAME: Joi.string().required(),
+        DATABASE_PORT: Joi.number().required(),
+      }),
+    }),
+    HttpModule,
+    UsersModule,
+    ProductsModule,
+    DatabaseModule,
+  ],
+  controllers: [AppController],
+  providers: [
+    AppService,
+    // { provide: 'API_KEY', useValue: API_KEY },
+    {
+      provide: 'TASKS',
+      useFactory: async (http: HttpService) => {
+        // no es buena idea usar para llamar a apis
+        // es bueno usarlo para una conexion a una base de datos
+        // el inicio del servicio depende de una api externa y detiene la ejecucion.
+        const tasks: any = await http
+          .get('https://jsonplaceholder.typicode.com/todos')
+          .toPromise();
+        return tasks.data;
+      },
+      inject: [HttpService],
+    },
+  ],
+})
+export class AppModule {
+  static port: number;
+
+  constructor(private readonly configService: ConfigService) {
+    AppModule.port = +this.configService.get('PORT');
+  }
+}
